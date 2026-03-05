@@ -1,0 +1,1 @@
+DROP INDEX idx_role_fit_user_job;

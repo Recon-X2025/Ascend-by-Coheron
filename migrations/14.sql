@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX idx_role_fit_user_job ON role_fit_assessments(user_id, job_key);

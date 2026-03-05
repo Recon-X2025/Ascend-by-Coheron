@@ -1,0 +1,319 @@
+// Ascend by Coheron — PostgreSQL schema (mirrors original D1/SQLite schema)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// NextAuth.js (Prisma adapter) — id, name, email, emailVerified, image required by NextAuth
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  profiles      Profile[]
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+model Profile {
+  id            Int      @id @default(autoincrement())
+  full_name     String
+  email         String
+  phone         String?
+  location       String?
+  headline      String?
+  summary       String?
+  linkedin_url   String?
+  resume_key    String?
+  target_role   String?
+  target_industry String?
+  career_goals  String?
+  user_id       String?
+  created_at    DateTime @default(now())
+  updated_at    DateTime @default(now())
+
+  user          User?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  experiences   Experience[]
+  education      Education[]
+  skills         Skill[]
+  applications   Application[]
+  saved_searches SavedSearch[]
+  resume_versions ResumeVersion[]
+  role_fit_assessments RoleFitAssessment[]
+
+  @@index([email])
+  @@index([user_id])
+  @@map("profiles")
+}
+
+model Experience {
+  id          Int      @id @default(autoincrement())
+  profile_id  Int
+  title       String
+  company     String
+  start_date  String?
+  end_date    String?
+  is_current  Boolean  @default(false)
+  description String?
+  sort_order  Int      @default(0)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @default(now())
+
+  profile     Profile  @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+
+  @@index([profile_id])
+  @@map("experiences")
+}
+
+model Education {
+  id               Int      @id @default(autoincrement())
+  profile_id       Int
+  degree           String
+  institution      String
+  graduation_year  String?
+  sort_order       Int      @default(0)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @default(now())
+
+  profile          Profile  @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+
+  @@index([profile_id])
+  @@map("education")
+}
+
+model Skill {
+  id         Int      @id @default(autoincrement())
+  profile_id Int
+  name       String
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+
+  profile    Profile  @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+
+  @@index([profile_id])
+  @@map("skills")
+}
+
+model Application {
+  id                Int      @id @default(autoincrement())
+  profile_id        Int
+  user_id           String?
+  job_title         String
+  company           String
+  job_url           String?
+  source            String?
+  location          String?
+  salary_range      String?
+  status            String   @default("applied")
+  notes             String?
+  match_score       Int?
+  priority          String?  @default("warm")
+  interview_date    DateTime?
+  contact_name      String?
+  follow_up_reminder Boolean @default(false)
+  job_description   String?
+  applied_at        DateTime @default(now())
+  last_activity_at  DateTime @default(now())
+  created_at        DateTime @default(now())
+  updated_at        DateTime @default(now())
+
+  profile           Profile  @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+
+  @@index([profile_id])
+  @@index([status])
+  @@index([user_id])
+  @@map("applications")
+}
+
+model SavedSearch {
+  id         Int      @id @default(autoincrement())
+  profile_id Int
+  name       String
+  query      String
+  location   String?
+  filters   String?
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+
+  profile    Profile  @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+
+  @@index([profile_id])
+  @@map("saved_searches")
+}
+
+model ResumeVersion {
+  id               Int      @id @default(autoincrement())
+  profile_id       Int
+  job_title        String
+  company          String?
+  job_description  String?
+  tailored_content String
+  match_score      Int?
+  created_at       DateTime @default(now())
+  updated_at       DateTime @default(now())
+
+  profile          Profile  @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+
+  @@index([profile_id])
+  @@map("resume_versions")
+}
+
+model Referral {
+  id             Int      @id @default(autoincrement())
+  user_id        String
+  referral_code  String   @unique
+  referred_count Int      @default(0)
+  converted_count Int     @default(0)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @default(now())
+
+  @@index([user_id])
+  @@index([referral_code])
+  @@map("referrals")
+}
+
+model EulaAcceptance {
+  id               Int       @id @default(autoincrement())
+  user_id          String
+  eula_version     String
+  accepted_at      DateTime  @default(now())
+  marketing_consent Int      @default(0)
+  ip_address       String?
+  user_agent       String?
+  age_verified     Int       @default(0)
+  age_verified_at  DateTime?
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @default(now())
+
+  @@index([user_id, eula_version])
+  @@map("eula_acceptances")
+}
+
+model DataConsentPreference {
+  id                 Int      @id @default(autoincrement())
+  user_id            String
+  help_improve_ascend Int     @default(1)
+  updated_at         DateTime @default(now())
+  created_at         DateTime @default(now())
+
+  @@index([user_id])
+  @@map("data_consent_preferences")
+}
+
+model DataExportRequest {
+  id           Int       @id @default(autoincrement())
+  user_id      String
+  status       String    @default("pending")
+  requested_at DateTime  @default(now())
+  completed_at DateTime?
+  download_url String?
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @default(now())
+
+  @@index([user_id])
+  @@map("data_export_requests")
+}
+
+model AccountDeletionRequest {
+  id                     Int       @id @default(autoincrement())
+  user_id                String
+  status                 String    @default("pending")
+  requested_at            DateTime  @default(now())
+  scheduled_deletion_date DateTime?
+  completed_at            DateTime?
+  created_at             DateTime  @default(now())
+  updated_at             DateTime  @default(now())
+
+  @@index([user_id])
+  @@map("account_deletion_requests")
+}
+
+model PlatformReferral {
+  id         Int      @id @default(autoincrement())
+  user_id    String
+  platform   String
+  job_title  String?
+  job_url    String?
+  clicked_at DateTime @default(now())
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+
+  @@index([user_id])
+  @@index([platform])
+  @@map("platform_referrals")
+}
+
+model CompanySearch {
+  id          Int      @id @default(autoincrement())
+  user_id     String
+  company_name String
+  company_url String?
+  searched_at DateTime @default(now())
+  created_at  DateTime @default(now())
+  updated_at  DateTime @default(now())
+
+  @@index([user_id])
+  @@map("company_searches")
+}
+
+model RoleFitAssessment {
+  id                      Int      @id @default(autoincrement())
+  user_id                 String
+  profile_id              Int
+  job_key                 String
+  job_title               String?
+  company                 String?
+  fit_score               Int
+  required_years_experience Int?
+  candidate_years_experience Int?
+  strong_matches          String?
+  gaps_identified         String?
+  fit_summary             String?
+  created_at              DateTime @default(now())
+  updated_at              DateTime @default(now())
+
+  profile                 Profile  @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, job_key])
+  @@index([user_id])
+  @@index([job_key])
+  @@map("role_fit_assessments")
+}

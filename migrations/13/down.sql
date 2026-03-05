@@ -1,0 +1,5 @@
+
+DROP INDEX idx_role_fit_assessments_user_job;
+DROP INDEX idx_role_fit_assessments_job_key;
+DROP INDEX idx_role_fit_assessments_user_id;
+DROP TABLE role_fit_assessments;
