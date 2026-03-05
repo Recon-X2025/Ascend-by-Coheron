@@ -11,5 +11,5 @@
     "allowImportingTsExtensions": false,
     "allowSyntheticDefaultImports": true
   },
-  "include": ["src/server.ts", "src/node/**/*.ts", "src/worker/**/*.ts", "src/env-types.ts", "src/shared/**/*.ts"]
+  "include": ["src/server.ts", "src/server/**/*.ts", "src/node/**/*.ts", "src/worker/**/*.ts", "src/env-types.ts", "src/shared/**/*.ts"]
 }

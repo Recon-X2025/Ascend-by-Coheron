@@ -1,19 +1,15 @@
 /**
- * Node.js HTTP server entry point for the Ascend backend.
- * Serves the Hono app via @hono/node-server. Listens on process.env.PORT || 3000.
- * Passes Node bindings (incoming, outgoing) into the app so NextAuth can handle GET/POST /api/auth/[...nextauth].
- *
- * No ExecutionContext (waitUntil, passThroughOnException) is used on Node; app.fetch is called with (request, env) only.
- *
- * Usage:
- *   npm run dev:server   # or: npm run start
- *   npx tsx src/server.ts
+ * Node.js HTTP server entry. Uses modular app (server/app.ts), validates env, starts job worker.
  */
-
+import { validateEnv } from "@/server/utils/env";
+import { startJobWorker } from "@/server/jobs/workers";
+import app from "@/server/app";
 import { serve } from "@hono/node-server";
 import type { HttpBindings, Http2Bindings } from "@hono/node-server";
-import app from "./worker/index";
-import { getPort } from "./node/get-app-env";
+import { getPort } from "@/node/get-app-env";
+
+validateEnv();
+startJobWorker();
 
 const port = getPort();
 
